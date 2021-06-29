@@ -718,13 +718,16 @@ impl Item {
             if let TypeKind::TemplateInstantiation(ref inst) = *ty.kind() {
                 to.push_str(&format!("_open{}_", level));
                 for arg in inst.template_arguments() {
-                    let next_level = level
-                        .checked_add(1)
-                        .expect("too many template levels, oops");
-                    arg.into_resolver()
-                        .through_type_refs()
-                        .resolve(ctx)
-                        .push_disambiguated_name(ctx, to, next_level);
+                    let next_level = level.checked_add(1);
+                    match next_level {
+                        Some(next_level) => {
+                            arg.into_resolver()
+                                .through_type_refs()
+                                .resolve(ctx)
+                                .push_disambiguated_name(ctx, to, next_level);
+                        }
+                        None => to.push_str("TOOMANYLAYERSOOPS"),
+                    }
                     to.push_str("_");
                 }
                 to.push_str(&format!("close{}", level));
